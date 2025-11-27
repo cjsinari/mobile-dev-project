@@ -13,7 +13,6 @@ lifecycleViewmodel = "2.9.4"
 
 googleGmsGoogleServices = "4.4.4"
 firebaseBom = "34.6.0"
-firebaseCommonKtx = "22.0.1"
 
 coilCompose = "2.7.0"
 
@@ -46,7 +45,7 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
-firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-ktx", version.ref = "firebaseCommonKtx" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

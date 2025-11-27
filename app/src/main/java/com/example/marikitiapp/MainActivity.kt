@@ -14,6 +14,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.marikitiapp.ui.sharon.SharonNavigation
+import com.example.marikitiapp.ui.product.PostProductScreen
+import com.example.marikitiapp.ui.product.SuccessScreen
+import com.example.marikitiapp.ui.product.YourProductsScreen
+import com.example.marikitiapp.ui.dashboard.SellerDashboardScreen
+import com.example.marikitiapp.DiscoverScreen
+import com.example.marikitiapp.LoginScreen
+import com.example.marikitiapp.ProductScreen
+import com.example.marikitiapp.ProductCard
+import com.example.marikitiapp.SignupScreen
 import com.example.marikitiapp.ui.theme.MarikitiAppTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth

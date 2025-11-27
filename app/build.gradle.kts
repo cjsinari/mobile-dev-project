@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.example.marikitiapp"
-    compileSdk = 34   // Use stable SDK
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.marikitiapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.navigation.compose)
 
     // Coil
     implementation(libs.coil.compose)
@@ -80,7 +81,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.common.ktx)
+    implementation(libs.firebase.storage)
 
     // Ktor HTTP Client
     implementation(libs.ktor.client.core)

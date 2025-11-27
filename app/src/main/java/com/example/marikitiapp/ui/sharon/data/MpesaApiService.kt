@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.android.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -68,9 +69,9 @@ class MpesaApiService {
             val response = client.post("$baseUrl/api/mpesa/stk-push") {
                 contentType(ContentType.Application.Json)
                 setBody(request)
-                timeout {
+                /*timeout {
                     requestTimeoutMillis = 30_000
-                }
+                } */
             }
             
             if (response.status.isSuccess()) {
@@ -104,12 +105,8 @@ class MpesaApiService {
      */
     suspend fun checkPaymentStatus(checkoutRequestID: String): Result<String> {
         return try {
-            val response = client.get("$baseUrl/api/mpesa/status/$checkoutRequestID") {
-                timeout {
-                    requestTimeoutMillis = 10_000
-                }
-            }
-            
+            val response = client.get("$baseUrl/api/mpesa/status/$checkoutRequestID")
+
             if (response.status.isSuccess()) {
                 val status = response.body<String>()
                 Result.success(status)
