@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// ViewModel for fetching seller's products
+// ViewModel for fetching all products
 class YourProductsViewModel(private val repo: FirebaseProductRepository) : ViewModel() {
 
     private val _products = MutableStateFlow<List<Product>>(emptyList())
@@ -207,31 +208,37 @@ fun ProductGrid(
     // Group products by category
     val groupedProducts = products.groupBy { it.category }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+    androidx.compose.foundation.lazy.LazyColumn(
         contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         groupedProducts.forEach { (category, categoryProducts) ->
-            // Category header spanning full width
-            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(3) }) {
+            // Category header
+            item {
                 Text(
                     text = category,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                    modifier = Modifier.padding(bottom = 8.dp),
                     fontSize = 16.sp,
                     color = Color(0xFF1F4D2E)
                 )
             }
 
-            // Products in this category
-            items(categoryProducts) { product ->
-                ProductCard(
-                    product = product,
-                    onClick = { onProductClick(product.id) }
-                )
+            // Horizontal scrolling row for products
+            item {
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(categoryProducts) { product ->
+                        ProductCard(
+                            product = product,
+                            onClick = { onProductClick(product.id) },
+                            modifier = Modifier.width(110.dp) // Fixed width for consistent cards
+                        )
+                    }
+                }
             }
         }
     }
@@ -240,11 +247,11 @@ fun ProductGrid(
 @Composable
 fun ProductCard(
     product: Product,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .clickable(onClick = onClick)
     ) {
         // Product Image with better styling
@@ -304,4 +311,3 @@ fun ProductCard(
         }
     }
 }
-
