@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -93,16 +95,37 @@ sealed class ProductUiState {
 
 @Composable
 private fun ProductScreenHeader() {
-    Column(
+    // Use a Box to easily align the icon to the end
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp))
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                MaterialTheme.colorScheme.primary,
+                RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp)
+            )
     ) {
-        Text("MARIKITI", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-        Spacer(modifier = Modifier.height(10.dp))
-        Text("Our Products", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+        // The original header content
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("MARIKITI", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+            Spacer(modifier = Modifier.height(10.dp))
+            Text("Our Products", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+        }
+
+        // The forward arrow icon
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = "Navigate Forward", // Descriptive for accessibility
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier
+                .align(Alignment.CenterEnd) // Position icon to the right
+                .padding(end = 24.dp)       // Add some padding from the edge
+                .size(28.dp)                // Set a nice size
+        )
     }
 }
 
@@ -127,5 +150,6 @@ private fun CategorySection(title: String, products: List<Product>) {
         }
     }
 }
+
 
 

@@ -40,10 +40,12 @@ private val LightColorScheme = lightColorScheme(
 
     background = Color(0xFFF5F5ED), // Your specified Grey
     onBackground = Color(0xFF1C1C16),
-    surface = Color(0xFFFDFCF5),
+    // FIX: Set surface to a pure white for a brighter look inside components
+    surface = Color.White,
     onSurface = Color(0xFF1C1C16),
 
-    surfaceVariant = Color(0xFFF5F5ED), // Use your grey for cards
+    // FIX: Use pure white for card containers.
+    surfaceVariant = Color.White,
     onSurfaceVariant = Color(0xFF45483D),
 
     outline = Color(0xFF75786C),
@@ -77,7 +79,9 @@ private val DarkColorScheme = darkColorScheme(
     surface = Color(0xFF14140F),
     onSurface = Color(0xFFC9C7BF),
 
-    surfaceVariant = Color(0xFF31312A), // Dark grey for cards in dark mode
+    // In dark mode, you want a dark grey for cards, not white.
+    // This color is appropriate for dark theme cards.
+    surfaceVariant = Color(0xFF31312A),
     onSurfaceVariant = Color(0xFFC5C8B9),
 
     outline = Color(0xFF8F9285),
@@ -112,3 +116,4 @@ fun MarikitiAppTheme(
         content = content
     )
 }
+

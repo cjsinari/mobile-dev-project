@@ -53,8 +53,8 @@ class MainActivity : ComponentActivity() {
                                 auth = auth,
                                 onLoginClick = { navController.navigate("login") },
                                 onSignupSuccess = {
-                                    // Navigate to discover and clear the back stack
-                                    navController.navigate("discover") {
+                                    // Navigate to product and clear the back stack
+                                    navController.navigate("product") {
                                         popUpTo("discover") { inclusive = true }
                                     }
                                 }
@@ -65,8 +65,8 @@ class MainActivity : ComponentActivity() {
                                 auth = auth,
                                 onSignupClick = { navController.navigate("signup") },
                                 onLoginSuccess = {
-                                    // Navigate to discover and clear the back stack
-                                    navController.navigate("discover") {
+                                    // FIX: Navigate to product and clear the back stack
+                                    navController.navigate("product") {
                                         popUpTo("discover") { inclusive = true }
                                     }
                                 }
@@ -82,6 +82,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 
 
