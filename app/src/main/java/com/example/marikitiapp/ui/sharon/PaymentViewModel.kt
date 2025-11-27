@@ -39,10 +39,22 @@ class PaymentViewModel(
 
     private fun loadPaymentMethods() {
         viewModelScope.launch {
-            // Only M-Pesa and Cash options
+            // Only M-Pesa and Cash options with proper descriptions
             _paymentMethods.value = listOf(
-                PaymentMethod(id = "mpesa", name = "M-Pesa", icon = "📱", isSelected = true),
-                PaymentMethod(id = "cash", name = "Cash", icon = "💵", isSelected = false)
+                PaymentMethod(
+                    id = "mpesa",
+                    name = "M-Pesa",
+                    icon = "📱",
+                    isSelected = true,
+                    description = "Pay securely with M-Pesa"
+                ),
+                PaymentMethod(
+                    id = "cash",
+                    name = "Cash",
+                    icon = "💵",
+                    isSelected = false,
+                    description = "Pay with cash on delivery"
+                )
             )
             _selectedPaymentMethod.value = _paymentMethods.value.first()
         }
@@ -80,7 +92,7 @@ class PaymentViewModel(
         try {
             // Create order first
             val orderResult = cartViewModel.createOrder(selectedMethod.id)
-            
+
             if (orderResult.isFailure) {
                 _error.value = orderResult.exceptionOrNull()?.message ?: "Failed to create order"
                 _isProcessing.value = false
@@ -141,5 +153,45 @@ class PaymentViewModel(
 
     fun clearError() {
         _error.value = null
+    }
+}
+
+// PaymentMethod data class with description parameter
+
+
+// If you need the PaymentRepository and OrderRepository stubs, here they are:
+class PaymentRepository {
+    suspend fun processMpesaPayment(phoneNumber: String, amount: Double, orderId: String): Result<Unit> {
+        // Simulate M-Pesa payment processing
+        return try {
+            // In a real app, this would call M-Pesa API
+            kotlinx.coroutines.delay(2000) // Simulate API call
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun processCashPayment(orderId: String, amount: Double): Result<Unit> {
+        // Simulate cash payment processing
+        return try {
+            // For cash payments, just mark as pending
+            kotlinx.coroutines.delay(1000)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+class OrderRepository {
+    suspend fun createOrder(cartItems: List<CartItem>, paymentMethod: String): Result<String> {
+        // Simulate order creation
+        return try {
+            kotlinx.coroutines.delay(1500)
+            Result.success("ORD-${System.currentTimeMillis()}")
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

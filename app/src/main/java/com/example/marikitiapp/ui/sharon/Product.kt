@@ -13,6 +13,7 @@ data class Product(
     val reviewCount: Int = 0,
     val inStock: Boolean = true,
     val sellerId: String = ""
+//    @DrawableRes val imageRes: Int,
 )
 
 data class CartItem(
@@ -27,7 +28,8 @@ data class PaymentMethod(
     val id: String,
     val name: String,
     val icon: String,
-    val isSelected: Boolean = false
+    val isSelected: Boolean = false,
+    val description: String
 )
 
 data class Order(

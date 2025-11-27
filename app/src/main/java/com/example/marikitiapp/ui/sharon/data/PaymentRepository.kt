@@ -39,58 +39,75 @@ class PaymentRepository {
     /**
      * Process M-Pesa STK Push payment
      * This calls your backend API which initiates the STK Push
+     *
+     * --- M-PESA FUNCTIONALITY IS TEMPORARILY DISABLED ---
      */
     suspend fun processMpesaPayment(
         phoneNumber: String,
         amount: Double,
         orderId: String
-    ): Result<String> = try {
-        // Step 1: Create payment record in Firestore first
+    ): Result<String> {
+        // Step 1: Create a payment record in Firestore as "pending".
         val paymentResult = createPayment(orderId, "mpesa", amount, phoneNumber)
-        
-        if (paymentResult.isFailure) {
-            return paymentResult
+
+        val paymentId = paymentResult.getOrElse {
+            // If creating the record fails, return the failure.
+            return Result.failure(it)
         }
-        
-        val paymentId = paymentResult.getOrNull() 
-            ?: return Result.failure(Exception("Failed to create payment record"))
-        
-        // Step 2: Initiate STK Push via backend API
-        val stkPushRequest = StkPushRequest(
-            phoneNumber = phoneNumber,
-            amount = amount,
-            orderId = orderId,
-            paymentId = paymentId
-        )
-        
-        val stkPushResult = mpesaApiService.initiateStkPush(stkPushRequest)
-        
-        if (stkPushResult.isFailure) {
-            // Update payment status to failed
-            updatePaymentStatus(paymentId, "failed").getOrNull()
-            return Result.failure(
-                stkPushResult.exceptionOrNull() 
-                    ?: Exception("Failed to initiate STK Push")
+
+        // Step 2: Immediately update the status to "pending" with a note that it's disabled,
+        // instead of calling the M-Pesa API.
+        updatePaymentStatus(paymentId, "pending", "M-Pesa payments are temporarily disabled.")
+
+        // Step 3: Return success with the paymentId.
+        // The UI can treat this as a pending payment.
+        return Result.success(paymentId)
+
+        /*
+        // --- ORIGINAL M-PESA LOGIC (COMMENTED OUT) ---
+        return try {
+            val paymentResult = createPayment(orderId, "mpesa", amount, phoneNumber)
+
+            if (paymentResult.isFailure) {
+                return paymentResult
+            }
+
+            val paymentId = paymentResult.getOrNull()
+                ?: return Result.failure(Exception("Failed to create payment record"))
+
+            val stkPushRequest = StkPushRequest(
+                phoneNumber = phoneNumber,
+                amount = amount,
+                orderId = orderId,
+                paymentId = paymentId
             )
+
+            val stkPushResult = mpesaApiService.initiateStkPush(stkPushRequest)
+
+            if (stkPushResult.isFailure) {
+                updatePaymentStatus(paymentId, "failed").getOrNull()
+                return Result.failure(
+                    stkPushResult.exceptionOrNull()
+                        ?: Exception("Failed to initiate STK Push")
+                )
+            }
+
+            val stkResponse = stkPushResult.getOrNull()
+                ?: return Result.failure(Exception("No STK response"))
+
+            paymentsCollection.document(paymentId).update(
+                hashMapOf(
+                    "checkoutRequestID" to (stkResponse.checkoutRequestID ?: ""),
+                    "mpesaMessage" to (stkResponse.message ?: "")
+                )
+            ).await()
+
+            Result.success(paymentId)
+
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-        
-        val stkResponse = stkPushResult.getOrNull() 
-            ?: return Result.failure(Exception("No STK response"))
-        
-        // Step 3: Store checkout request ID in payment record
-        paymentsCollection.document(paymentId).update(
-            hashMapOf(
-                "checkoutRequestID" to (stkResponse.checkoutRequestID ?: ""),
-                "mpesaMessage" to (stkResponse.message ?: "")
-            )
-        ).await()
-        
-        // Payment is now pending - backend webhook will update status when user confirms
-        // The user will receive STK Push on their phone
-        Result.success(paymentId)
-        
-    } catch (e: Exception) {
-        Result.failure(e)
+        */
     }
 
     /**
@@ -101,10 +118,10 @@ class PaymentRepository {
         amount: Double
     ): Result<String> = try {
         val paymentResult = createPayment(orderId, "cash", amount)
-        
+
         if (paymentResult.isSuccess) {
             // Cash payments are always pending until delivery
-            updatePaymentStatus(paymentResult.getOrNull() ?: "", "pending")
+            updatePaymentStatus(paymentResult.getOrNull() ?: "", "pending", "Awaiting cash payment on delivery.")
             Result.success(paymentResult.getOrNull() ?: "")
         } else {
             Result.failure(paymentResult.exceptionOrNull() ?: Exception("Payment failed"))
@@ -114,11 +131,15 @@ class PaymentRepository {
     }
 
     /**
-     * Update payment status
+     * Update payment status and an optional message
      */
-    suspend fun updatePaymentStatus(paymentId: String, status: String): Result<Unit> = try {
+    suspend fun updatePaymentStatus(paymentId: String, status: String, message: String? = null): Result<Unit> = try {
+        val updates = mutableMapOf<String, Any>("status" to status)
+        if (message != null) {
+            updates["statusMessage"] = message
+        }
         paymentsCollection.document(paymentId)
-            .update("status", status)
+            .update(updates as Map<String, Any>)
             .await()
         Result.success(Unit)
     } catch (e: Exception) {
@@ -129,12 +150,9 @@ class PaymentRepository {
      * Cancel/Refund payment
      */
     suspend fun cancelPayment(paymentId: String): Result<Unit> = try {
-        paymentsCollection.document(paymentId)
-            .update("status", "refunded")
-            .await()
+        updatePaymentStatus(paymentId, "refunded", "Payment was cancelled by user.")
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
     }
 }
-

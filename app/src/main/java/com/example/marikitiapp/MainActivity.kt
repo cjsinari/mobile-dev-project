@@ -10,14 +10,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.marikitiapp.ui.sharon.SharonNavigation
-import com.example.marikitiapp.ui.theme.MarikitiAppTheme
+import com.example.marikitiapp.ui.theme.MarikitiTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MarikitiAppTheme {
+            MarikitiTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

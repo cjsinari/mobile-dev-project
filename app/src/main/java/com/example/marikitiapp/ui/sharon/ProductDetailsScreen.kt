@@ -1,31 +1,35 @@
 package com.example.marikitiapp.ui.sharon
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 
-// Make sure these imports are correct and the files exist.
-// import com.example.marikitiapp.ui.sharon.CartViewModel
-// import com.example.marikitiapp.ui.sharon.ProductDetailsViewModel
-// import com.example.marikitiapp.ui.sharon.AddToCartPopup
-// import com.example.marikitiapp.ui.sharon.Product
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun ProductDetailsScreen(
     productId: String? = null,
@@ -40,272 +44,305 @@ fun ProductDetailsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // Load product when the screen is first displayed or productId changes
+    var isFavorite by remember { mutableStateOf(false) }
+
     LaunchedEffect(productId) {
         productId?.let { viewModel.loadProduct(it) }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Product Details") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToCart) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            ProductDetailsTopBar(
+                onBackClick = onBackClick,
+                isFavorite = isFavorite,
+                onFavoriteClick = { isFavorite = !isFavorite },
+                onCartClick = onNavigateToCart
             )
         },
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 8.dp,
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Quantity Selector
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            onClick = { viewModel.decreaseQuantity() },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Text(
-                            text = quantity.toString(),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                        IconButton(
-                            onClick = { viewModel.increaseQuantity() },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    // Add to Cart Button
-                    Button(
-                        onClick = { viewModel.showAddToCartDialog() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(
-                            "Add to Cart",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
+            if (!isLoading && error == null && product != null) {
+                ProductBottomBar(
+                    quantity = quantity,
+                    onIncrease = { viewModel.increaseQuantity() },
+                    onDecrease = { viewModel.decreaseQuantity() },
+                    onAddToCart = { viewModel.showAddToCartDialog() }
+                )
             }
         }
     ) { paddingValues ->
-        // This is the main content area of the Scaffold
-        val currentProduct = product
-
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        CircularProgressIndicator()
-                        Text(
-                            text = "Loading product...",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-            error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Error loading product",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = error ?: "Unknown error",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Button(onClick = {
-                            viewModel.clearError()
-                            productId?.let { viewModel.loadProduct(it) }
-                        }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-            currentProduct != null -> { // Use the local variable here
-                // 'currentProduct' is now smart-cast to non-null
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    // Product Image Placeholder
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(400.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Product Image",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Product Info Section
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Product Name
-                        Text(
-                            text = currentProduct.name,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        // Rating
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "⭐ ${currentProduct.rating}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "(${currentProduct.reviewCount} reviews)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        // Price
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "$${String.format("%.2f", currentProduct.price)}",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            currentProduct.originalPrice?.let { originalPrice ->
-                                Text(
-                                    text = "$${String.format("%.2f", originalPrice)}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textDecoration = TextDecoration.LineThrough
-                                )
-                            }
-                        }
-
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-                        // Description
-                        Text(
-                            text = "Description",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = currentProduct.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 24.sp
-                        )
-                    }
-                }
-            }
-            else -> {
-                // This block is shown if loading is false, error is null, and product is null
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Product not found",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when {
+                isLoading -> FashionSkeletonLoader()
+                error != null -> AnimatedErrorState(error = error, onRetry = {
+                    viewModel.clearError()
+                    productId?.let { viewModel.loadProduct(it) }
+                })
+                product != null -> ProductDetailsContent(product!!)
+                else -> EmptyProductState()
             }
         }
     }
 
-    // Add to Cart Dialog
-    if (showDialog) {
-        val currentProduct = product // Use a local variable here as well
-        if (currentProduct != null) {
-            AddToCartPopup(
-                product = currentProduct, // Pass the non-null local variable
-                quantity = quantity,
-                cartViewModel = cartViewModel,
-                onDismiss = { viewModel.hideAddToCartDialog() },
-                onConfirm = {
-                    // AddToCartPopup already adds the item to cart when "View Cart" is clicked
-                    // So we just need to dismiss and navigate
-                    viewModel.hideAddToCartDialog()
-                    onNavigateToCart()
-                }
+    // Add to cart dialog
+    if (showDialog && product != null) {
+        AddToCartPopup(
+            product = product!!,
+            quantity = quantity,
+            cartViewModel = cartViewModel,
+            onDismiss = { viewModel.hideAddToCartDialog() },
+            onConfirm = {
+                viewModel.hideAddToCartDialog()
+                onNavigateToCart()
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProductDetailsTopBar(
+    onBackClick: () -> Unit,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
+    onCartClick: () -> Unit
+) {
+    TopAppBar(
+        title = { Text("Product Details", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) },
+        navigationIcon = {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .shadow(4.dp, CircleShape)
+                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+            ) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
+        },
+        actions = {
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .shadow(4.dp, CircleShape)
+                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(
+                onClick = onCartClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .shadow(4.dp, CircleShape)
+                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+            ) { Icon(Icons.Default.ShoppingCart, contentDescription = "Cart") }
+        }
+    )
+}
+
+@Composable
+private fun ProductDetailsContent(product: Product) {
+    val pagerState = rememberPagerState(pageCount = { 3 })
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
+        ProductImagePager(product = product, pagerState = pagerState)
+        ProductInfo(product = product)
+    }
+}
+
+@Composable
+private fun ProductImagePager(product: Product, pagerState: androidx.compose.foundation.pager.PagerState) {
+    Box(modifier = Modifier.fillMaxWidth().height(400.dp)) {
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            AsyncImage(
+                model = product.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(24.dp))
             )
+        }
+
+        // Pager indicator
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        ) {
+            repeat(pagerState.pageCount) { index ->
+                val color = if (pagerState.currentPage == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProductInfo(product: Product) {
+    Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(product.name, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+
+        // Rating
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            repeat(5) { index ->
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = if (index < product.rating.toInt()) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Text("${product.rating} (${product.reviewCount} reviews)", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        // Price
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Ksh${product.price}", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            product.originalPrice?.let { oldPrice ->
+                Spacer(Modifier.width(8.dp))
+                Text("Ksh$oldPrice", color = MaterialTheme.colorScheme.onSurfaceVariant, textDecoration = TextDecoration.LineThrough)
+                val discount = ((oldPrice - product.price) / oldPrice * 100).toInt()
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(MaterialTheme.colorScheme.error)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) { Text("-$discount%", color = MaterialTheme.colorScheme.onError, fontWeight = FontWeight.Bold) }
+            }
+        }
+
+        // Description
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Description", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(product.description, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = 22.sp)
+        }
+    }
+}
+
+@Composable
+private fun ProductBottomBar(
+    quantity: Int,
+    onIncrease: () -> Unit,
+    onDecrease: () -> Unit,
+    onAddToCart: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(12.dp, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), clip = true),
+        color = MaterialTheme.colorScheme.background,
+        tonalElevation = 6.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ModernQuantitySelector(quantity, onDecrease, onIncrease, modifier = Modifier.weight(1f))
+            Button(
+                onClick = onAddToCart,
+                modifier = Modifier.weight(2f).height(56.dp).clip(RoundedCornerShape(16.dp)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp, pressedElevation = 16.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Add to Cart", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernQuantitySelector(
+    quantity: Int,
+    onDecrease: () -> Unit,
+    onIncrease: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        IconButton(
+            onClick = onDecrease,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+        ) { Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface) }
+
+        Text(quantity.toString(), fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+
+        IconButton(
+            onClick = onIncrease,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+        ) { Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface) }
+    }
+}
+
+@Composable
+private fun AnimatedErrorState(error: String?, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Something went wrong", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.error)
+        Text(error ?: "Unknown error occurred", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(16.dp))
+        Button(onClick = onRetry, shape = RoundedCornerShape(12.dp)) { Text("Try Again") }
+    }
+}
+
+@Composable
+private fun EmptyProductState() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Product not found", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun FashionSkeletonLoader() {
+    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Box(modifier = Modifier.fillMaxWidth().height(400.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceVariant))
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            repeat(4) {
+                Box(modifier = Modifier.fillMaxWidth().height(18.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.surfaceVariant))
+            }
         }
     }
 }
