@@ -12,7 +12,6 @@ pluginManagement {
     }
 }
 
-// FIX: Add this plugins block to enable auto-downloading of Java toolchains.
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }

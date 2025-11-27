@@ -13,10 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.marikitiapp.ui.product.PostProductScreen
-import com.example.marikitiapp.ui.product.SuccessScreen
-import com.example.marikitiapp.ui.product.YourProductsScreen
-import com.example.marikitiapp.ui.dashboard.SellerDashboardScreen
+import com.example.marikitiapp.ui.sharon.SharonNavigation
 import com.example.marikitiapp.ui.theme.MarikitiAppTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -41,7 +38,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MarikitiApp(auth, firestore)
+                    // Combined navigation: Your flows + SharonNavigation
+                    val navController: NavHostController = rememberNavController()
+                    CombinedNavigation(navController, auth, firestore)
                 }
             }
         }
@@ -49,12 +48,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MarikitiApp(auth: FirebaseAuth, firestore: FirebaseFirestore) {
-    val navController: NavHostController = rememberNavController()
-
+fun CombinedNavigation(
+    navController: NavHostController,
+    auth: FirebaseAuth,
+    firestore: FirebaseFirestore
+) {
     NavHost(
         navController = navController,
-        startDestination = "discover"
+        startDestination = "seller_dashboard"
     ) {
         // Jamie's authentication flows
         composable("discover") {
@@ -87,7 +88,7 @@ fun MarikitiApp(auth: FirebaseAuth, firestore: FirebaseFirestore) {
             )
         }
 
-        // Your seller dashboard flow
+        // Seller dashboard flows
         composable("seller_dashboard") {
             SellerDashboardScreen(
                 onPostProduct = { navController.navigate("post_product") },
@@ -96,18 +97,15 @@ fun MarikitiApp(auth: FirebaseAuth, firestore: FirebaseFirestore) {
                 onBack = { navController.popBackStack() }
             )
         }
-
         composable("post_product") {
             PostProductScreen(
                 navController = navController,
                 onBack = { navController.popBackStack() }
             )
         }
-
         composable("success_screen") {
             SuccessScreen(navController)
         }
-
         composable("your_products") {
             YourProductsScreen(
                 navController = navController,
@@ -127,7 +125,7 @@ fun MarikitiApp(auth: FirebaseAuth, firestore: FirebaseFirestore) {
             ProductScreen(auth = auth, firestore = firestore)
         }
 
-        // Future extension
+        // Placeholder for analytics screen
         composable("analytics") {
             // TODO: Implement AnalyticsScreen
         }

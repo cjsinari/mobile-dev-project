@@ -2,18 +2,20 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.gms.google.services)
     id("kotlin-parcelize")
+
 }
 
 android {
     namespace = "com.example.marikitiapp"
-    compileSdk = 36
+    compileSdk = 34   // Use stable SDK
 
     defaultConfig {
         applicationId = "com.example.marikitiapp"
-        minSdk = 31
-        targetSdk = 36
+        minSdk = 24
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -31,8 +33,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -43,8 +49,6 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
 
-
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -52,19 +56,15 @@ android {
     }
 }
 
-// Defines the JVM toolchain for Kotlin, ensuring Gradle can find and use JDK 11.
-kotlin {
-    jvmToolchain(11)
-
-}
-
 dependencies {
     // Core & Jetpack
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.savedstate)
 
-    // Jetpack Compose
+    // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -73,16 +73,25 @@ dependencies {
     implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.androidx.material.icons.extended)
 
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
-
     // Coil
     implementation(libs.coil.compose)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.common.ktx)
+
+    // Ktor HTTP Client
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+
+    // Kotlin Serialization
+    implementation(libs.kotlinx.serialization)
 
     // Testing
     testImplementation(libs.junit)
