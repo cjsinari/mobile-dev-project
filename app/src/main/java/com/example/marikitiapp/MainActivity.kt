@@ -4,9 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,49 +19,80 @@ import com.example.marikitiapp.ui.product.YourProductsScreen
 import com.example.marikitiapp.ui.dashboard.SellerDashboardScreen
 import com.example.marikitiapp.ui.theme.MarikitiAppTheme
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 
 class MainActivity : ComponentActivity() {
+
+    // Firebase Initialization
+    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
+
         setContent {
             MarikitiAppTheme {
-                  MaterialTheme(colorScheme = lightColorScheme()) {
-                      MarikitiApp()
-                  }
-
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    MarikitiApp(auth, firestore)
                 }
             }
         }
     }
+}
 
 @Composable
-fun MarikitiApp() {
-    val navController = rememberNavController()
+fun MarikitiApp(auth: FirebaseAuth, firestore: FirebaseFirestore) {
+    val navController: NavHostController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = "seller_dashboard"
+        startDestination = "discover"
     ) {
+        // Jamie's authentication flows
+        composable("discover") {
+            DiscoverScreen(
+                firestore = firestore,
+                onSignupClick = { navController.navigate("signup") },
+                onLoginClick = { navController.navigate("login") }
+            )
+        }
+        composable("signup") {
+            SignupScreen(
+                auth = auth,
+                onLoginClick = { navController.navigate("login") },
+                onSignupSuccess = {
+                    navController.navigate("seller_dashboard") {
+                        popUpTo("discover") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("login") {
+            LoginScreen(
+                auth = auth,
+                onSignupClick = { navController.navigate("signup") },
+                onLoginSuccess = {
+                    navController.navigate("seller_dashboard") {
+                        popUpTo("discover") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Your seller dashboard flow
         composable("seller_dashboard") {
             SellerDashboardScreen(
-                onPostProduct = {
-                    navController.navigate("post_product") {
-                        // Clear back stack to prevent multiple instances
-                        launchSingleTop = true
-                    }
-                },
-                onYourProducts = {
-                    navController.navigate("your_products") {
-                        launchSingleTop = true
-                    }
-                },
-                onAnalytics = {
-                    navController.navigate("analytics") {
-                        launchSingleTop = true
-                    }
-                },
+                onPostProduct = { navController.navigate("post_product") },
+                onYourProducts = { navController.navigate("your_products") },
+                onAnalytics = { navController.navigate("analytics") },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -79,28 +113,21 @@ fun MarikitiApp() {
                 navController = navController,
                 onBack = {
                     navController.navigate("seller_dashboard") {
-                        // Clear everything and go back to dashboard
                         popUpTo("seller_dashboard") { inclusive = false }
                     }
                 },
                 onProductClick = { productId ->
-                    // Navigate to product detail screen (implement later)
                     // navController.navigate("product_detail/$productId")
                 }
             )
         }
 
-        // Optional: Add product detail screen for future
-        composable("product_detail/{productId}") { backStackEntry ->
-            val productId = backStackEntry.arguments?.getString("productId") ?: ""
-            // TODO: Implement ProductDetailScreen
-            // ProductDetailScreen(
-            //     productId = productId,
-            //     onBack = { navController.popBackStack() }
-            // )
+        // Jamie’s product screen
+        composable("product") {
+            ProductScreen(auth = auth, firestore = firestore)
         }
 
-        // Placeholder for analytics screen
+        // Future extension
         composable("analytics") {
             // TODO: Implement AnalyticsScreen
         }
